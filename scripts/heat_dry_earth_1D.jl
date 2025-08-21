@@ -1,9 +1,19 @@
 using Terrarium
+using CUDA
 
 import SpeedyWeather.RingGrids
 
-grid = GlobalRingGrid(GPU(), ExponentialSpacing(N=50), RingGrids.FullHEALPixGrid(16, RingGrids.Architectures.GPU()))
-initializer = FieldInitializers(temperature = (x,z) -> -1.0 - 0.01*z + exp(z/10)*sin(2π*z/10))
-model = SoilModel(; grid, initializer)
+ring_grid = RingGrids.FullHEALPixGrid(16, RingGrids.Architectures.GPU())
+grid = GlobalRingGrid(GPU(), ExponentialSpacing(N=50), ring_grid)
+# initial conditions
+initializer = Initializers(
+    # steady-ish state initial condition for temperature
+    temperature = (x,z) -> -1 - 0.02*z,
+    # dry soil
+    pore_water_ice_saturation = 0.0,
+)
+boundary_conditions = SoilBoundaryConditions(grid, top=(temperature=ValueBoundaryCondition(2.0),))
+model = SoilModel(; grid, initializer, boundary_conditions)
 sim = initialize(model)
 @time timestep!(sim)
+@time run!(sim, period=Day(10))

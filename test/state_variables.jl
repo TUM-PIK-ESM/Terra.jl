@@ -1,7 +1,7 @@
 using Terrarium
 using Test
 
-import Terrarium: XY, XYZ, prognostic, auxiliary, namespace
+import Terrarium: VarDims, XY, XYZ, prognostic, auxiliary, namespace
 import Oceananigans: Field, Center
 
 DEFAULT_NF = Float32
@@ -10,8 +10,8 @@ DEFAULT_NF = Float32
 
     @kwdef struct SubModel{NF} <: Terrarium.AbstractModel{NF}
         grid
-        boundary_conditions = Terrarium.FieldBoundaryConditions()
-        initializer = Terrarium.FieldInitializers()
+        initializer = DefaultInitializer()
+        boundary_conditions = DefaultBoundaryConditions()
         time_stepping::Terrarium.AbstractTimeStepper{NF} = Terrarium.ForwardEuler{DEFAULT_NF}()
     end
 
@@ -23,14 +23,14 @@ DEFAULT_NF = Float32
     @kwdef struct TestModel{NF} <: Terrarium.AbstractModel{NF}
         grid
         submodel = SubModel(; grid)
-        boundary_conditions = Terrarium.FieldBoundaryConditions()
-        initializer = Terrarium.FieldInitializers()
+        initializer = DefaultInitializer()
+        boundary_conditions = DefaultBoundaryConditions()
         time_stepping::Terrarium.AbstractTimeStepper{NF} = Terrarium.ForwardEuler{DEFAULT_NF}()
     end
 
     struct TestClosure <: Terrarium.AbstractClosureRelation end
 
-    Terrarium.varname(::TestClosure) = :closurevar
+    Terrarium.getvar(::TestClosure, dims::VarDims) = auxiliary(:closurevar, dims)
 
     Terrarium.variables(model::TestModel) = (
         prognostic(:progvar3D, XYZ()),
