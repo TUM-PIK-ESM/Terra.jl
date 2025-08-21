@@ -19,7 +19,7 @@ Alias for `PrescribedFlux` with name `Q_out` representing water drainage at the 
 a soil column. When this flux is set to zero, it corresponds to an impermeable boundary.
 """
 FreeDrainage(value) = PrescribedFlux(:Q_out, value, XY())
-ImpermeableBoundary(::Type{NF}) where {NF<:AbstractFloat} = PrescribedFlux(:Q_out, zero(NF), XY())
+ImpermeableBoundary() = DefaultBoundaryConditions() # default BC is zero flux
 
 # Convenience constructors for common soil upper and lower boundary conditions
 SoilBoundaryConditions(
@@ -30,14 +30,14 @@ SoilBoundaryConditions(
 
 SoilUpperBoundaryConditions(
     grid::AbstractLandGrid;
-    energy = GroundHeatFlux(zero(eltype(grid))),
-    hydrology = InfiltrationFlux(zero(eltype(grid)))
+    energy = GroundHeatFlux(nothing),
+    hydrology = InfiltrationFlux(nothing),
 ) = SoilBoundaryCondition(energy, hydrology)
 
 SoilLowerBoundaryConditions(
     grid::AbstractLandGrid;
     energy = GeothermalHeatFlux(zero(eltype(grid))),
-    hydrology = ImpermeableBoundary(eltype(grid)),
+    hydrology = ImpermeableBoundary(),
 ) = SoilBoundaryCondition(energy, hydrology)
 
 """
@@ -52,6 +52,8 @@ struct SoilBoundaryCondition{EnergyBC, WaterBC} <: AbstractBoundaryConditions
 
     "Boundary conditions for the soil water balance"
     hydrology::WaterBC
+
+    # TODO: add fields for other processes
 end
 
 variables(bc::SoilBoundaryCondition) = tuplejoin(variables(bc.hydrology), variables(bc.energy))

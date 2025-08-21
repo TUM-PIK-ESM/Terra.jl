@@ -67,7 +67,7 @@ struct PrescribedFlux{name, F, D<:VarDims} <: AbstractBoundaryConditions
     "Dimensions of the flux variable"
     dims::D
 
-    PrescribedFlux(name::Symbol, value, dims=XY()) = new{name, typeof(value), typeof(dims)}(value, dims)
+    PrescribedFlux(name::Symbol, value=nothing, dims=XY()) = new{name, typeof(value), typeof(dims)}(value, dims)
 end
 
 @inline varname(::PrescribedFlux{name}) where {name} = name
